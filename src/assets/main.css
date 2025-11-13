@@ -1,0 +1,51 @@
+@font-face {
+    font-family: Heebo;
+    font-style: normal;
+    font-weight: 400;
+    src: url('../assets/typefaces/Heebo-Regular.woff2') format("woff2")
+}
+
+@font-face {
+    font-family: Heebo;
+    font-style: normal;
+    font-weight: 500;
+    src: url('../assets/typefaces/Heebo-Medium.woff2') format("woff2")
+}
+
+@font-face {
+    font-family: Heebo;
+    font-style: normal;
+    font-weight: 700;
+    src: url('../assets/typefaces/Heebo-Bold.woff2') format("woff2")
+}
+
+@font-face {
+    font-family: Heebo;
+    font-style: normal;
+    font-weight: 800;
+    src: url('../assets/typefaces/Heebo-ExtraBold.woff2') format("woff2")
+}
+
+@font-face {
+    font-family: 'Special Gothic Condensed One';
+    src: url('../assets/typefaces/SpecialGothicCondensedOne-Regular.ttf') format('truetype');
+}
+
+body {
+    margin: 0;
+    font-family: Heebo, arial, sans-serif;
+    font-size: 16px;
+    color: #ffffff;
+    background: #111316;
+}
+
+h1:not(:empty),
+h2:not(:empty),
+h3:not(:empty),
+h4:not(:empty),
+h5:not(:empty),
+h6:not(:empty) {
+    color: currentColor;
+    font-family: Heebo, arial;
+    font-weight: 800;
+}
