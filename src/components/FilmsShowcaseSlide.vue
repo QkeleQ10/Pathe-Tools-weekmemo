@@ -2,18 +2,18 @@
 import { ref } from 'vue';
 import type * as types from '@/scripts/types.ts';
 import ShowcaseItem from './ShowcaseItem.vue';
-
-// gather all films from https://www.pathe.nl/api/shows?language=nl
-// filter by slugs that appear in https://www.pathe.nl/api/cinema/pathe-utrecht-leidsche-rijn/shows?language=nl
-// expand with https://www.pathe.nl/api/show/<SLUG>?language=nl
-// and with https://www.pathe.nl/api/show/<SLUG>/showtimes/pathe-utrecht-leidsche-rijn/<YYYY-MM-DD>?language=nl
+import Loader from './Loader.vue';
 
 const sortedMovies = ref<types.CombinedPatheShow[]>([]);
-sortedMovies.value = (await getShows()).sort((a, b) => {
-    const freqA = a.showtimes.length;
-    const freqB = b.showtimes.length;
-    return freqB - freqA;
-}).slice(0, 5);
+
+async function populate() {
+    sortedMovies.value = (await getShows()).sort((a, b) => {
+        const freqA = a.showtimes.length;
+        const freqB = b.showtimes.length;
+        return freqB - freqA;
+    }).slice(0, 5);
+}
+populate();
 
 async function getShows() {
     return new Promise<types.CombinedPatheShow[]>(async (resolve, reject) => {
@@ -52,8 +52,7 @@ async function fetchJson<T>(url: string): Promise<T> {
 </script>
 
 <template>
-
-    <div class="slide" id="films-playing">
+    <div class="slide" id="films-playing" v-if="sortedMovies.length">
         <div id="header">
             <h3>Wat draait er?</h3>
             <small>
@@ -63,16 +62,28 @@ async function fetchJson<T>(url: string): Promise<T> {
         <ShowcaseItem v-for="(movie, i) in sortedMovies" :key="movie.slug" :movie="movie" :i="i" />
     </div>
 
+    <div class="slide centre" v-else>
+        <div class="centre">
+            <Loader />
+        </div>
+    </div>
+
 </template>
 
 <style scoped>
+.centre {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    width: 100%;
+}
+
 #films-playing {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
     grid-template-rows: auto 3fr 2fr auto;
     gap: 2.5%;
-
-    height: 100%;
 
     padding: 5%;
     background-color: #1b1d23;

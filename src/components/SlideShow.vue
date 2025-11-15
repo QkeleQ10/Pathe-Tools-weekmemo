@@ -1,27 +1,57 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { format } from 'date-fns';
-import FilmsShowcase from './FilmsShowcase.vue';
-import Loader from './Loader.vue';
+import FilmsShowcaseSlide from './FilmsShowcaseSlide.vue';
+import ImageSlide from './ImageSlide.vue';
 
 const now = ref(new Date());
 setInterval(() => {
     now.value = new Date();
 }, 1000);
+
+interface ImageData {
+    data: string;
+}
+
+interface SlidesResponse {
+    images: ImageData[];
+    count: number;
+}
+
+const images = ref<ImageData[]>([]);
+const currentSlideIndex = ref(0);
+const totalSlides = computed(() => images.value.length + 1); // +1 for FilmsShowcaseSlide
+
+async function fetchImages() {
+    try {
+        const response = await fetch('http://localhost:3541/slides');
+        if (!response.ok) {
+            throw new Error(`Failed to fetch slides: ${response.status}`);
+        }
+        const data: SlidesResponse = await response.json();
+        images.value = data.images;
+    } catch (error) {
+        console.error('Error fetching images:', error);
+    }
+}
+
+onMounted(() => {
+    fetchImages();
+
+    // Auto-advance slides every 60 seconds
+    setInterval(() => {
+        currentSlideIndex.value = (currentSlideIndex.value + 1) % totalSlides.value;
+    }, 60 * 1000);
+});
 </script>
 
 <template>
     <main id="slides">
         <Transition name="slide">
             <KeepAlive>
-                <Suspense>
-                    <FilmsShowcase />
-                    <template #fallback>
-                        <div class="centre">
-                            <Loader />
-                        </div>
-                    </template>
-                </Suspense>
+                <ImageSlide v-if="currentSlideIndex < images.length && images[currentSlideIndex]?.data"
+                    :key="`image-${currentSlideIndex}`" :dataUrl="images[currentSlideIndex]!.data" class="slide" />
+                <FilmsShowcaseSlide v-else key="films-slide" class="slide" />
             </KeepAlive>
         </Transition>
     </main>
@@ -38,6 +68,8 @@ setInterval(() => {
 
     .slide {
         box-sizing: border-box;
+        height: 100%;
+        width: 100%;
     }
 }
 
@@ -47,14 +79,6 @@ setInterval(() => {
     right: 16px;
     color: #ffffffb3;
     font-size: 1.2em;
-}
-
-.centre {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100%;
-    width: 100%;
 }
 
 .slide-enter-active,
