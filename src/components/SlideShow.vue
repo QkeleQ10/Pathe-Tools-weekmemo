@@ -9,16 +9,7 @@ setInterval(() => {
     now.value = new Date();
 }, 1000);
 
-interface ImageData {
-    data: string;
-}
-
-interface SlidesResponse {
-    images: ImageData[];
-    count: number;
-}
-
-const images = ref<ImageData[]>([]);
+const images = ref<string[]>([]);
 const currentSlideIndex = ref(0);
 const totalSlides = computed(() => images.value.length + 1); // +1 for FilmsShowcaseSlide
 
@@ -28,8 +19,8 @@ async function fetchImages() {
         if (!response.ok) {
             throw new Error(`Failed to fetch slides: ${response.status}`);
         }
-        const data: SlidesResponse = await response.json();
-        images.value = data.images;
+        const data: string[] = await response.json();
+        images.value = data;
     } catch (error) {
         console.error('Error fetching images:', error);
     }
@@ -47,13 +38,11 @@ onMounted(() => {
 
 <template>
     <main id="slides">
-        <Transition name="slide">
-            <KeepAlive>
-                <ImageSlide v-if="currentSlideIndex < images.length && images[currentSlideIndex]?.data"
-                    :key="`image-${currentSlideIndex}`" :dataUrl="images[currentSlideIndex]!.data" class="slide" />
-                <FilmsShowcaseSlide v-else key="films-slide" class="slide" />
-            </KeepAlive>
-        </Transition>
+        <TransitionGroup name="slide">
+            <ImageSlide v-for="(filename, index) in images" v-show="currentSlideIndex === index && filename?.length"
+                :key="`image-${index}`" :src="`http://localhost:3541/slides/${filename}`" class="slide" />
+            <FilmsShowcaseSlide v-show="currentSlideIndex === images.length" key="films-slide" class="slide" />
+        </TransitionGroup>
     </main>
     <span id="clock">
         {{ format(now, 'HH:mm:ss') }}
@@ -70,6 +59,7 @@ onMounted(() => {
         box-sizing: border-box;
         height: 100%;
         width: 100%;
+        cursor: none;
     }
 }
 

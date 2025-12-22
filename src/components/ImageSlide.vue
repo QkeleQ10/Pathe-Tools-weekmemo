@@ -1,12 +1,12 @@
 <script setup lang="ts">
 defineProps<{
-    dataUrl: string;
+    src: string;
 }>();
 </script>
 
 <template>
     <div class="slide image-slide">
-        <img :src="dataUrl" alt="Slide image" />
+        <img :src="src" alt="Slide image" />
     </div>
 </template>
 
