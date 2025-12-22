@@ -26,13 +26,32 @@ async function fetchImages() {
     }
 }
 
+function prevSlide() {
+    currentSlideIndex.value = (currentSlideIndex.value - 1 + totalSlides.value) % totalSlides.value;
+}
+
+function nextSlide() {
+    currentSlideIndex.value = (currentSlideIndex.value + 1) % totalSlides.value;
+}
+
 onMounted(() => {
     fetchImages();
 
     // Auto-advance slides every 60 seconds
     setInterval(() => {
-        currentSlideIndex.value = (currentSlideIndex.value + 1) % totalSlides.value;
+        nextSlide();
     }, 60 * 1000);
+
+    // Bind keyboard controls for slide navigation
+    const handleKeydown = (event: KeyboardEvent) => {
+        if (event.key === 'ArrowLeft') {
+            prevSlide();
+        } else if (event.key === 'ArrowRight') {
+            nextSlide();
+        }
+    };
+
+    window.addEventListener('keydown', handleKeydown);
 });
 </script>
 
@@ -44,7 +63,9 @@ onMounted(() => {
             <FilmsShowcaseSlide v-show="currentSlideIndex === images.length" key="films-slide" class="slide" />
         </TransitionGroup>
     </main>
-    <span id="clock">
+    <img id="logo" src="https://media.pathe.nl/files_nl/logo/logo.svg"
+        :class="{ hide: currentSlideIndex !== images.length }">
+    <span id="clock" :class="{ hide: currentSlideIndex !== images.length }">
         {{ format(now, 'HH:mm:ss') }}
     </span>
 </template>
@@ -63,12 +84,34 @@ onMounted(() => {
     }
 }
 
+#logo {
+    position: absolute;
+    bottom: 3.5vh;
+    left: 5vw;
+    height: 3vh;
+    transition: opacity 0.5s, bottom 0.5s, left 0.5s, height 0.5s;
+
+    &.hide {
+        opacity: 0.25;
+        bottom: 8px;
+        left: 8px;
+        height: 2.5vh;
+    }
+}
+
 #clock {
     position: absolute;
-    top: 16px;
-    right: 16px;
-    color: #ffffffb3;
-    font-size: 1.2em;
+    bottom: 3.5vh;
+    right: 5vw;
+    color: #fff;
+    font-size: 1.4em;
+    transition: bottom 0.5s, right 0.5s, font-size 0.5s;
+
+    &.hide {
+        bottom: 8px;
+        right: 8px;
+        font-size: 1.2em;
+    }
 }
 
 .slide-enter-active,

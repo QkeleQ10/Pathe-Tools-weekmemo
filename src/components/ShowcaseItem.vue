@@ -45,7 +45,7 @@ function formatSynopsis(synopsis: string): string {
 
 <template>
     <div class="showcase-item" :key="movie.slug"
-        :style="{ backgroundColor: movie.backgroundDominantColor, '--animation-delay': `${0.2 * i + 0.2}s` }"
+        :style="{ '--accent': movie.backgroundDominantColor, '--animation-delay': `${0.2 * i + 0.2}s` }"
         :class="`i${i}`">
         <img class="background" :src="movie.backgroundPath.lg">
         <div class="image" :style="{ backgroundImage: `url(${movie.posterPath.lg})` }" alt="Movie Poster"></div>

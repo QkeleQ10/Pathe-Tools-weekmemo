@@ -80,14 +80,15 @@ async function fetchJson<T>(url: string): Promise<T> {
 }
 
 #films-playing {
+    position: relative;
     display: grid;
     grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
     grid-template-rows: auto 3fr 2fr auto;
-    gap: 2.5%;
+    gap: 2.5vh 1.5vw;
 
-    padding: 5%;
-    background-color: #1b1d23;
-    background-image: radial-gradient(90% 90% at 0% 100%, #ffffff1a 0%, transparent 100%);
+    padding: 5vh 5vw 7vh;
+    background-color: #090a0b;
+    /* background-image: radial-gradient(90% 90% at 0% 100%, #ffffff1a 0%, transparent 100%); */
     background-repeat: no-repeat;
     background-size: 340px 100%;
     color: #ffffff;

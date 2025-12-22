@@ -5,7 +5,7 @@
 <style scoped>
 /* HTML: <div class="loader"></div> */
 .loader {
-    --c: no-repeat linear-gradient(hsl(164, 100%, 50%) 0 0);
+    --c: no-repeat linear-gradient(#feb91e 0 0);
     background:
         var(--c), var(--c), var(--c),
         var(--c), var(--c), var(--c),
