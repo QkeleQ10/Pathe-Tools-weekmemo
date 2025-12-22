@@ -121,7 +121,7 @@ function formatSynopsis(synopsis: string): string {
         max-width: 100%;
         max-height: 100%;
         aspect-ratio: 2 / 3;
-        background-size: cover;
+        background-size: 100% 100%;
         background-position: center;
         border-radius: .25vmax;
         box-shadow: 0 0 0 1px #fff3, 0 2px 10px rgba(0, 0, 0, 0.1);

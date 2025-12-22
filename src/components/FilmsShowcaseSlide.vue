@@ -8,8 +8,8 @@ const sortedMovies = ref<types.CombinedPatheShow[]>([]);
 
 async function populate() {
     sortedMovies.value = (await getShows()).sort((a, b) => {
-        const freqA = a.showtimes.length;
-        const freqB = b.showtimes.length;
+        const freqA = a.next24ShowtimesCount;
+        const freqB = b.next24ShowtimesCount;
         return freqB - freqA;
     }).slice(0, 5);
 }
