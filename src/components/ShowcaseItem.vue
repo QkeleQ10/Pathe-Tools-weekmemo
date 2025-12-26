@@ -13,6 +13,7 @@ import type { CombinedPatheShow } from '../scripts/types.ts';
 const props = defineProps<{
     movie: CombinedPatheShow;
     i: number;
+    minimal?: boolean;
 }>();
 
 const cumulativeFeeling = computed(() => (props.movie.details.feelings.countEmotionDisappointed + props.movie.details.feelings.countEmotionLike + props.movie.details.feelings.countEmotionLove))
@@ -44,13 +45,12 @@ function formatSynopsis(synopsis: string): string {
 </script>
 
 <template>
-    <div class="showcase-item" :key="movie.slug"
-        :style="{ '--accent': movie.backgroundDominantColor, '--animation-delay': `${0.2 * i + 0.2}s` }"
-        :class="`i${i}`">
-        <img class="background" :src="movie.backgroundPath.lg">
+    <div class="showcase-item" :class="{ minimal, [`i${i}`]: true }" :key="movie.slug"
+        :style="{ '--accent': movie.backgroundDominantColor, '--animation-delay': `${0.15 * i + 0.2}s` }">
+        <img class="background" v-if="!minimal" :src="movie.backgroundPath.lg">
         <div class="image" :style="{ backgroundImage: `url(${movie.posterPath.lg})` }" alt="Movie Poster"></div>
+        <h4 class="title">{{ movie.title }}</h4>
         <div class="details">
-            <h4 class="title">{{ movie.title }}</h4>
             <p class="metadata miscellaneous"><b>
                     {{ movie.theatreShow?.next24ShowtimesCount }}x &bull; {{ formatDuration(movie.duration)
                     }}
@@ -63,7 +63,7 @@ function formatSynopsis(synopsis: string): string {
                 <em>Releasedatum: {{ movie.releaseAt?.[0] ? formatDate(movie.releaseAt[0]) : '' }}</em>
             </p>
             <div class="plot-wrapper">
-                <p class="plot">{{ formatSynopsis(movie.details.synopsis) }}</p>
+                <p class="plot" v-if="!minimal">{{ formatSynopsis(movie.details.synopsis) }}</p>
             </div>
             <div class="feelings" v-if="cumulativeFeeling > 10">
                 <div class="feeling"
@@ -96,13 +96,18 @@ function formatSynopsis(synopsis: string): string {
     overflow: hidden;
 
     display: grid;
-    grid-template-columns: auto 1fr;
-    gap: .7em;
+    grid-template:
+        "image title" auto
+        "image details" 1fr
+        / auto 1fr;
+    column-gap: .7em;
 
+    font-size: 2.2rem;
     background-color: var(--accent);
     border-radius: .35vmax;
     padding: 1vmax;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    border: 1px solid #fff3;
+    box-shadow: .1em .1em 1em rgba(0, 0, 0, 0.25);
 
     /* Fade-in animation */
     animation: fadeInUp 0.6s ease-out both;
@@ -118,18 +123,29 @@ function formatSynopsis(synopsis: string): string {
     }
 
     .image {
+        grid-area: image;
         max-width: 100%;
         max-height: 100%;
         aspect-ratio: 2 / 3;
         background-size: 100% 100%;
         background-position: center;
         border-radius: .25vmax;
-        box-shadow: 0 0 0 1px #fff3, 0 2px 10px rgba(0, 0, 0, 0.1);
+        outline: 1px solid #fff3;
+        box-shadow: .1em .1em 1em rgba(0, 0, 0, 0.25);
+    }
+
+    .title {
+        grid-area: title;
+        margin: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 
     .details {
+        grid-area: details;
         display: grid;
-        grid-template-rows: auto auto auto 1fr auto;
+        grid-template-rows: auto auto 1fr auto;
         height: 100%;
         overflow: hidden;
 
@@ -140,16 +156,10 @@ function formatSynopsis(synopsis: string): string {
         }
     }
 
-    .title {
-        margin: 0;
-    }
-
     .metadata {
         margin-top: 0;
         margin-bottom: 0;
         font-size: .5em;
-        /* overflow: hidden; */
-        /* text-wrap: nowrap; */
         text-overflow: ellipsis;
 
         em {
@@ -175,7 +185,6 @@ function formatSynopsis(synopsis: string): string {
         margin-top: 0.5em;
         margin-bottom: 0.5em;
         font-size: .45em;
-        display: none;
     }
 
     .feelings {
@@ -204,23 +213,12 @@ function formatSynopsis(synopsis: string): string {
         }
     }
 
-    &.i0,
-    &.i1 {
-        .plot {
-            display: block;
-        }
+    &.minimal {
+        font-size: 1.7rem;
     }
 
-    &.i0 {
-        font-size: 1.3em;
-
-        .title {
-            font-size: 1.25em;
-        }
-    }
-
-    &.i1 {
-        font-size: 1.15em;
+    &:not(.minimal).i0 {
+        font-size: 2.7rem;
     }
 }
 

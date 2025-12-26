@@ -3,11 +3,14 @@ import { ref, onMounted, computed } from 'vue';
 import { format } from 'date-fns';
 import FilmsShowcaseSlide from './FilmsShowcaseSlide.vue';
 import ImageSlide from './ImageSlide.vue';
+import { useIdle } from '@vueuse/core';
 
 const now = ref(new Date());
 setInterval(() => {
     now.value = new Date();
 }, 1000);
+
+const { idle } = useIdle(2000);
 
 const images = ref<string[]>([]);
 const currentSlideIndex = ref(0);
@@ -34,13 +37,17 @@ function nextSlide() {
     currentSlideIndex.value = (currentSlideIndex.value + 1) % totalSlides.value;
 }
 
+function autoAdvance() {
+    setTimeout(() => {
+        nextSlide();
+        autoAdvance();
+    }, currentSlideIndex.value === images.value.length ? 60000 : 60000); // 60s for FilmsShowcaseSlide, 60s for images
+}
+
 onMounted(() => {
     fetchImages();
 
-    // Auto-advance slides every 60 seconds
-    setInterval(() => {
-        nextSlide();
-    }, 60 * 1000);
+    autoAdvance();
 
     // Bind keyboard controls for slide navigation
     const handleKeydown = (event: KeyboardEvent) => {
@@ -56,7 +63,7 @@ onMounted(() => {
 </script>
 
 <template>
-    <main id="slides">
+    <main id="slides" :class="{ 'cursor-hidden': idle }">
         <TransitionGroup name="slide">
             <ImageSlide v-for="(filename, index) in images" v-show="currentSlideIndex === index && filename?.length"
                 :key="`image-${index}`" :src="`http://localhost:3541/slides/${filename}`" class="slide" />
@@ -80,15 +87,18 @@ onMounted(() => {
         box-sizing: border-box;
         height: 100%;
         width: 100%;
-        cursor: none;
     }
+}
+
+#slides.cursor-hidden {
+    cursor: none;
 }
 
 #logo {
     position: absolute;
-    bottom: 3.5vh;
+    bottom: 3vh;
     left: 5vw;
-    height: 3vh;
+    height: 4vh;
     transition: opacity 0.5s, bottom 0.5s, left 0.5s, height 0.5s;
 
     &.hide {
@@ -101,10 +111,10 @@ onMounted(() => {
 
 #clock {
     position: absolute;
-    bottom: 3.5vh;
+    bottom: 3.75vh;
     right: 5vw;
     color: #fff;
-    font-size: 1.4em;
+    font-size: 2vh;
     transition: bottom 0.5s, right 0.5s, font-size 0.5s;
 
     &.hide {

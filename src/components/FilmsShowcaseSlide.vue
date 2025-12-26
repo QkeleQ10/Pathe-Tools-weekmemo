@@ -7,11 +7,16 @@ import Loader from './Loader.vue';
 const sortedMovies = ref<types.CombinedPatheShow[]>([]);
 
 async function populate() {
-    sortedMovies.value = (await getShows()).sort((a, b) => {
-        const freqA = a.next24ShowtimesCount;
-        const freqB = b.next24ShowtimesCount;
-        return freqB - freqA;
-    }).slice(0, 5);
+    sortedMovies.value = (await getShows())
+        .filter(movie => movie.theatreShow?.next24ShowtimesCount)
+        .sort((a, b) => {
+            const dateA = new Date(a.releaseAt[0] ?? '').getTime();
+            const dateB = new Date(b.releaseAt[0] ?? '').getTime();
+            const freqA = a.theatreShow?.next24ShowtimesCount ?? 0;
+            const freqB = b.theatreShow?.next24ShowtimesCount ?? 0;
+            return dateB - dateA || freqB - freqA;
+        }).slice(0, 6);
+    console.log(sortedMovies.value);
 }
 populate();
 
@@ -59,7 +64,13 @@ async function fetchJson<T>(url: string): Promise<T> {
                 <slot name="date"></slot>
             </small>
         </div>
-        <ShowcaseItem v-for="(movie, i) in sortedMovies" :key="movie.slug" :movie="movie" :i="i" />
+        <div class="flex" id="grid-top">
+            <ShowcaseItem v-for="(movie, i) in sortedMovies.slice(0, 2)" :key="movie.slug" :movie="movie" :i="i" />
+        </div>
+        <div class="flex" id="grid-bottom">
+            <ShowcaseItem v-for="(movie, i) in sortedMovies.slice(2, 6)" :key="movie.slug" :movie="movie" :i="i + 2"
+                :minimal="true" />
+        </div>
     </div>
 
     <div class="slide centre" v-else>
@@ -82,11 +93,10 @@ async function fetchJson<T>(url: string): Promise<T> {
 #films-playing {
     position: relative;
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
-    grid-template-rows: auto 3fr 2fr auto;
+    grid-template-rows: auto 2fr 1fr auto;
     gap: 2.5vh 1.5vw;
 
-    padding: 5vh 5vw 7vh;
+    padding: 5vh 5vw 8vh;
     background-color: #090a0b;
     /* background-image: radial-gradient(90% 90% at 0% 100%, #ffffff1a 0%, transparent 100%); */
     background-repeat: no-repeat;
@@ -109,15 +119,31 @@ h3 {
     margin: 0;
 }
 
-.showcase-item {
-    grid-column: span 3;
+.flex {
+    display: flex;
+    gap: 1.5vw;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    padding: 2em;
+    margin: -2em;
 
-    &.i0 {
-        grid-column: span 5;
+    &>* {
+        flex: 1 1 0;
     }
+}
 
-    &.i1 {
-        grid-column: span 4;
+#grid-top {
+    grid-template-columns: 55% 45%;
+    grid-auto-rows: 1fr;
+
+    *>*:first-child {
+        flex: 1.2 1 0;
     }
+}
+
+#grid-bottom {
+    grid-auto-columns: 1fr;
+    grid-template-rows: 1fr;
 }
 </style>
