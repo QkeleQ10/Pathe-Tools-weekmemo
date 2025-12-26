@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, useTemplateRef } from 'vue';
+import { ref, computed, onMounted, useTemplateRef } from 'vue';
 import type * as types from '@/scripts/types.ts';
 import ShowcaseHero from './ShowcaseHero.vue';
 import ShowcaseItem from './ShowcaseItem.vue';
