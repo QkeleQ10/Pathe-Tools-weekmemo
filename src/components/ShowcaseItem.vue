@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { format, parse } from 'date-fns';
 import { nl } from 'date-fns/locale';
 import IconRateBad from '../assets/symbols/IconRateBad.vue';
@@ -18,11 +18,18 @@ const props = defineProps<{
 
 const cumulativeFeeling = computed(() => (props.movie.details.feelings.countEmotionDisappointed + props.movie.details.feelings.countEmotionLike + props.movie.details.feelings.countEmotionLove))
 
-function formatDuration(minutes: number): string {
+const transitionDelayMultiplier = ref(1);
+onMounted(() => setTimeout(() => {
+    transitionDelayMultiplier.value = 0;
+}, 2000));
+</script>
+
+<script lang="ts">
+export function formatDuration(minutes: number): string {
     return minutes < 60 ? `${minutes}` : `${Math.floor(minutes / 60)}h${minutes % 60 ? `${String(minutes % 60).padStart(2, '0')}` : ''}`;
 }
 
-function formatDate(date: string) {
+export function formatDate(date: string) {
     try {
         // Parse the input date string (assuming "YYYY-MM-DD" format)
         const parsedDate = parse(date, 'yyyy-MM-dd', new Date());
@@ -35,18 +42,18 @@ function formatDate(date: string) {
     }
 }
 
-function formatSentenceCase(text: string): string {
+export function formatSentenceCase(text: string): string {
     return text.charAt(0).toUpperCase() + text.slice(1);
 }
 
-function formatSynopsis(synopsis: string): string {
+export function formatSynopsis(synopsis: string): string {
     return synopsis.replace(/<br\s*\/?>/g, '\n');
 }
 </script>
 
 <template>
     <div class="showcase-item" :class="{ minimal, [`i${i}`]: true }" :key="movie.slug"
-        :style="{ '--accent': movie.backgroundDominantColor, '--animation-delay': `${0.15 * i + 0.2}s` }">
+        :style="{ '--accent': movie.backgroundDominantColor, '--animation-delay': `${(0.15 * i + 0.2) * transitionDelayMultiplier}s` }">
         <img class="background" v-if="!minimal" :src="movie.backgroundPath.lg">
         <div class="image" :style="{ backgroundImage: `url(${movie.posterPath.lg})` }" alt="Movie Poster"></div>
         <h4 class="title">{{ movie.title }}</h4>
@@ -109,9 +116,17 @@ function formatSynopsis(synopsis: string): string {
     border: 1px solid #fff3;
     box-shadow: .1em .1em 1em rgba(0, 0, 0, 0.25);
 
+    opacity: 1;
+    transform: none;
+
     /* Fade-in animation */
-    animation: fadeInUp 0.6s ease-out both;
-    animation-delay: var(--animation-delay, 0s);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+    transition-delay: var(--animation-delay, 0s);
+
+    @starting-style {
+        opacity: 0;
+        transform: scale(0.95) translateY(20%);
+    }
 
     .background {
         position: absolute;
@@ -215,22 +230,11 @@ function formatSynopsis(synopsis: string): string {
 
     &.minimal {
         font-size: 1.7rem;
+        padding: .5vmax;
     }
 
     &:not(.minimal).i0 {
         font-size: 2.7rem;
-    }
-}
-
-@keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: scale(0.95) translateY(20%);
-    }
-
-    to {
-        opacity: 1;
-        transform: none;
     }
 }
 </style>

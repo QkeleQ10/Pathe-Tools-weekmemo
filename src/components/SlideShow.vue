@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
+import { useIdle } from '@vueuse/core';
 import { format } from 'date-fns';
 import FilmsShowcaseSlide from './FilmsShowcaseSlide.vue';
 import ImageSlide from './ImageSlide.vue';
-import { useIdle } from '@vueuse/core';
 
 const now = ref(new Date());
 setInterval(() => {
@@ -123,7 +123,9 @@ onMounted(() => {
         font-size: 1.2em;
     }
 }
+</style>
 
+<style>
 .slide-enter-active,
 .slide-leave-active {
     position: absolute;

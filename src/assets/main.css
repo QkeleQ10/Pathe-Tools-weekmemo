@@ -31,6 +31,12 @@
     src: url('../assets/typefaces/SpecialGothicCondensedOne-Regular.ttf') format('truetype');
 }
 
+@font-face {
+    font-family: 'Trade Gothic Bold Condensed 20';
+    src: url('../assets/typefaces/TradeGothicLTPro-BdCn20.woff') format('woff'),
+        url('../assets/typefaces/TradeGothicLTPro-BdCn20.woff2') format('woff2');
+}
+
 body {
     margin: 0;
     font-family: Heebo, arial, sans-serif;
