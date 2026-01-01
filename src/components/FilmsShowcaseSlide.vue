@@ -81,7 +81,7 @@ const relevantMovies = computed(() => {
     // return movies not older than 5 days from most recent release date
     return sortedMovies.value.filter(movie => {
         const releaseDate = new Date(movie.releaseAt[0] ?? '').getTime();
-        return (mostRecentReleaseDate - releaseDate) <= 5 * 24 * 60 * 60 * 1000;
+        return (mostRecentReleaseDate - releaseDate) <= 5 * 24 * 60 * 60 * 1000 || (new Date().getTime() - releaseDate) <= 6 * 24 * 60 * 60 * 1000;
     });
 })
 
