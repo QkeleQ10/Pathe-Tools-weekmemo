@@ -35,7 +35,7 @@ export function formatDate(date: string) {
         const parsedDate = parse(date, 'yyyy-MM-dd', new Date());
 
         // Format the date according to the specified pattern and locale
-        return format(parsedDate, 'dd MMM yyyy', { locale: nl });
+        return format(parsedDate, 'd MMMM yyyy', { locale: nl });
     } catch (error) {
         console.error('Error formatting date:', error);
         return date; // Return original string if parsing fails
@@ -67,7 +67,7 @@ export function formatSynopsis(synopsis: string): string {
                 <IconNicam18 v-if="movie.contentRating.ref === '-18ans'" />
             </p>
             <p class="metadata release">
-                <em>Releasedatum: {{ movie.releaseAt?.[0] ? formatDate(movie.releaseAt[0]) : '' }}</em>
+                <em>Releasedatum: {{ movie.releaseAt?.['NL_NL'] ? formatDate(movie.releaseAt['NL_NL'] ?? '') : '' }}</em>
             </p>
             <div class="plot-wrapper">
                 <p class="plot" v-if="!minimal">{{ formatSynopsis(movie.details.synopsis) }}</p>

@@ -1,7 +1,7 @@
 export type PatheApiShow = {
     slug: string;
     title: string;
-    releaseAt: string[];
+    releaseAt: Record<string, string>;
     posterPath: {
         lg: string;
         md: string;

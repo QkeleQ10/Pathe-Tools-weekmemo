@@ -35,7 +35,7 @@ onMounted(() => setTimeout(() => {
                 <IconNicam18 v-if="movie.contentRating.ref === '-18ans'" />
             </p>
             <p class="metadata release">
-                <em>Releasedatum: {{ movie.releaseAt?.[0] ? formatDate(movie.releaseAt[0]) : '' }}</em>
+                <em>Releasedatum: {{ movie.releaseAt?.['NL_NL'] ? formatDate(movie.releaseAt['NL_NL'] ?? '') : '' }}</em>
             </p>
             <div class="plot-wrapper">
                 <p class="plot">{{ formatSynopsis(movie.details.synopsis) }}</p>

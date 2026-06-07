@@ -4,6 +4,7 @@ import { useIdle } from '@vueuse/core';
 import { format } from 'date-fns';
 import FilmsShowcaseSlide from './FilmsShowcaseSlide.vue';
 import ImageSlide from './ImageSlide.vue';
+import type * as types from '@/scripts/types.ts';
 
 const now = ref(new Date());
 setInterval(() => {
@@ -13,7 +14,9 @@ setInterval(() => {
 const { idle } = useIdle(2000);
 
 const images = ref<string[]>([]);
+const filmsShowcaseMovies = ref<types.CombinedPatheShow[]>([]);
 const currentSlideIndex = ref(0);
+const slideDirection = ref('50%');
 const totalSlides = computed(() => images.value.length + 1); // +1 for FilmsShowcaseSlide
 
 async function fetchImages() {
@@ -29,12 +32,60 @@ async function fetchImages() {
     }
 }
 
+async function fetchJson<T>(url: string): Promise<T> {
+    const response = await fetch(url);
+    if (!response.ok) {
+        throw new Error(`Failed to fetch ${url}: ${response.status} ${response.statusText}`);
+    }
+    return response.json() as Promise<T>;
+}
+
+async function getShows() {
+    const shows = await fetchJson<{ shows: types.PatheApiShow[] }>('http://localhost:3541/proxy?url=https://www.pathe.nl/api/shows?language=nl');
+    if (!shows?.shows?.length) throw new Error('No shows found');
+
+    const theatreShows = await fetchJson<types.PatheApiTheatreShows>('http://localhost:3541/proxy?url=https://www.pathe.nl/api/cinema/pathe-utrecht-leidsche-rijn/shows?language=nl');
+    if (!theatreShows?.shows || !Object.keys(theatreShows.shows).length) throw new Error('No theatre shows found');
+
+    const combinedShows = Object.entries(theatreShows.shows).map(async ([slug, theatreShow]) => {
+        const details = await fetchJson<types.PatheApiShowDetails>(`http://localhost:3541/proxy?url=https://www.pathe.nl/api/show/${slug}?language=nl`);
+        const showtimes = await fetchJson<types.PatheApiShowtime[]>(`http://localhost:3541/proxy?url=https://www.pathe.nl/api/show/${slug}/showtimes/pathe-utrecht-leidsche-rijn/${new Date().toISOString().split('T')[0]}?language=nl`);
+        const baseShow = shows.shows.find(show => show.slug === slug);
+        return {
+            ...baseShow,
+            theatreShow,
+            details,
+            showtimes,
+        } as types.CombinedPatheShow;
+    });
+
+    return Promise.all(combinedShows);
+}
+
+async function fetchFilmsShowcaseMovies() {
+    try {
+        filmsShowcaseMovies.value = (await getShows())
+            .filter(movie => movie.theatreShow?.next24ShowtimesCount)
+            .sort((a, b) => {
+                const dateA = new Date(a.releaseAt['NL_NL'] ?? '').getTime();
+                const dateB = new Date(b.releaseAt['NL_NL'] ?? '').getTime();
+                const freqA = a.theatreShow?.next24ShowtimesCount ?? 0;
+                const freqB = b.theatreShow?.next24ShowtimesCount ?? 0;
+                return dateB - dateA || freqB - freqA;
+            }).slice(0, 12);
+    } catch (error) {
+        console.error('Error fetching films showcase movies:', error);
+    }
+}
+
 function prevSlide() {
     currentSlideIndex.value = (currentSlideIndex.value - 1 + totalSlides.value) % totalSlides.value;
+    slideDirection.value = '-50%';
 }
 
 function nextSlide() {
     currentSlideIndex.value = (currentSlideIndex.value + 1) % totalSlides.value;
+    slideDirection.value = '50%';
 }
 
 function autoAdvance() {
@@ -46,6 +97,7 @@ function autoAdvance() {
 
 onMounted(() => {
     fetchImages();
+    fetchFilmsShowcaseMovies();
 
     autoAdvance();
 
@@ -63,11 +115,12 @@ onMounted(() => {
 </script>
 
 <template>
-    <main id="slides" :class="{ 'cursor-hidden': idle }">
+    <main id="slides" :class="{ 'cursor-hidden': idle }" :style="{ '--slide-dir': slideDirection }">
         <TransitionGroup name="slide">
             <ImageSlide v-for="(filename, index) in images" v-show="currentSlideIndex === index && filename?.length"
                 :key="`image-${index}`" :src="`http://localhost:3541/slides/${filename}`" class="slide" />
-            <FilmsShowcaseSlide v-show="currentSlideIndex === images.length" key="films-slide" class="slide" />
+            <FilmsShowcaseSlide v-if="currentSlideIndex === images.length" key="films-slide" class="slide"
+                :movies="filmsShowcaseMovies" />
         </TransitionGroup>
     </main>
     <img id="logo" src="https://media.pathe.nl/files_nl/logo/logo.svg"
@@ -130,10 +183,15 @@ onMounted(() => {
 .slide-leave-active {
     position: absolute;
     transition: all 0.5s;
+    width: 100%;
+}
+
+.slide-enter-active {
+    z-index: 1;
 }
 
 .slide-enter-from {
-    transform: translateX(20%);
+    transform: translateX(var(--slide-dir)) scale(0.8);
     opacity: 0;
 }
 
@@ -143,7 +201,7 @@ onMounted(() => {
 }
 
 .slide-leave-to {
-    transform: scale(0.9);
+    transform: translateX(calc(-1 * var(--slide-dir))) scale(0.8);
     opacity: 0;
 }
 </style>
