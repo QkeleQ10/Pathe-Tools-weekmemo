@@ -37,7 +37,6 @@ function animateScroll(el: HTMLElement, to: number, duration = 2500) {
 }
 
 const currentIndex = ref(0);
-const slideDirection = ref('50%');
 const relevantMovies = computed(() => {
     const mostRecentReleaseDate = sortedMovies.value.length
         ? new Date(sortedMovies.value[0]?.releaseAt['NL_NL'] ?? '').getTime()
@@ -82,7 +81,6 @@ function autoAdvance() {
     const advanceTimer = setTimeout(() => {
         timers.delete(advanceTimer);
         if (!isActive) return;
-        slideDirection.value = '50%';
         currentIndex.value = (currentIndex.value + 1) % relevantMovies.value.length;
         autoAdvance();
     }, 30000);
@@ -92,7 +90,6 @@ function autoAdvance() {
 function goToSlide(index: number) {
     console.log('Go to slide', index);
     console.log('Current index', currentIndex.value);
-    slideDirection.value = index >= currentIndex.value ? '50%' : '-50%';
     currentIndex.value = index;
 }
 
@@ -116,8 +113,8 @@ onBeforeUnmount(() => {
     <div class="slide" id="films-playing" v-if="sortedMovies.length">
         <div id="backgrounds">
             <TransitionGroup name="fade">
-                <template v-for="(movie, i) in sortedMovies" :key="movie.slug">
-                    <div class="background" v-show="currentIndex === i" :style="{
+                <template v-for="(movie, i) in sortedMovies.slice(0, relevantMovies.length)" :key="movie.slug">
+                    <div class="background" v-if="currentIndex === i" :style="{
                         '--image': `url(${movie.backgroundPath.lg})`,
                         '--accent': movie.backgroundDominantColor
                     }"></div>
@@ -130,15 +127,15 @@ onBeforeUnmount(() => {
                 <slot name="date"></slot>
             </small>
         </div>
-        <div id="heroes" :style="{ '--slide-dir': slideDirection }">
-            <TransitionGroup name="slide">
+        <div id="heroes">
+            <TransitionGroup name="details">
                 <template v-for="(movie, i) in sortedMovies" :key="movie.slug">
-                    <ShowcaseHero v-show="currentIndex === i" :movie="movie" :i="i" />
+                    <ShowcaseHero v-if="currentIndex === i" :movie="movie" :i="i" />
                 </template>
             </TransitionGroup>
         </div>
         <div id="thumbnails" ref="thumbnailsEl">
-            <ShowcaseItem :minimal="true" :class="{ selected: currentIndex === i }" v-for="(movie, i) in sortedMovies"
+            <ShowcaseItem :minimal="true" :selected="currentIndex === i" v-for="(movie, i) in sortedMovies"
                 :key="movie.slug" :movie="movie" :i="i" @click="goToSlide(i)" />
         </div>
     </div>
@@ -161,9 +158,12 @@ onBeforeUnmount(() => {
 }
 
 #films-playing {
-    position: relative;
     display: grid;
-    grid-template-rows: 10vh 58vh 30vh;
+    grid-template:
+        "thumbnails header" auto
+        "thumbnails heroes" 1fr
+        / 25% 75%;
+    gap: 1em;
 
     background-color: #090a0b;
     color: #ffffff;
@@ -186,7 +186,9 @@ onBeforeUnmount(() => {
 }
 
 #header {
-    padding: 5vh 5vw 0;
+    grid-area: header;
+
+    margin-top: 1em;
 
     display: flex;
     justify-content: space-between;
@@ -202,29 +204,13 @@ onBeforeUnmount(() => {
 }
 
 #heroes {
-    position: relative;
-
-    .showcase-hero {
-        position: absolute;
-        inset: 0;
-        padding: 2.5vh 5vw;
-    }
+    grid-area: heroes;
 }
 
 #thumbnails {
-    display: flex;
-    gap: 1vw;
-    overflow: hidden;
-    padding: 2.5vh 5vw 10vh;
+    grid-area: thumbnails;
 
-    .showcase-item {
-        flex: 1 0 300px;
-
-        &.selected {
-            transform: translateY(-1em);
-            /* opacity: 0; */
-        }
-    }
+    padding: .5em;
 }
 </style>
 
@@ -236,6 +222,21 @@ onBeforeUnmount(() => {
 
 .fade-enter-from,
 .fade-leave-to {
+    opacity: 0;
+}
+
+.details-enter-active,
+.details-leave-active {
+    position: absolute;
+    transition: opacity 0.5s ease, translate 0.5s ease;
+}
+
+.details-enter-from {
+    translate: -.5em;
+}
+
+.details-enter-from,
+.details-leave-to {
     opacity: 0;
 }
 </style>

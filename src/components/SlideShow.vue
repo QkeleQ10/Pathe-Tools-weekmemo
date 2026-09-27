@@ -6,6 +6,7 @@ import FilmsShowcaseSlide from './FilmsShowcaseSlide.vue';
 import ImageSlide from './ImageSlide.vue';
 import type * as types from '@/scripts/types.ts';
 import VideoSlide from './VideoSlide.vue';
+import { nl } from 'date-fns/locale';
 
 const now = ref(new Date());
 setInterval(() => {
@@ -19,7 +20,6 @@ const mediaSources = ref<Record<string, string>>({});
 const mediaSourcePromises = new Map<string, Promise<string>>();
 const filmsShowcaseMovies = ref<types.CombinedPatheShow[]>([]);
 const currentSlideIndex = ref(0);
-const slideDirection = ref('50%');
 const totalSlides = computed(() => media.value.length + 1); // +1 for FilmsShowcaseSlide
 
 function fetchMediaSource(filename: string): Promise<string> {
@@ -125,17 +125,14 @@ async function fetchFilmsShowcaseMovies() {
 
 function manPrevSlide() {
     currentSlideIndex.value = (currentSlideIndex.value - 1 + totalSlides.value) % totalSlides.value;
-    slideDirection.value = '-50%';
 }
 
 function manNextSlide() {
     currentSlideIndex.value = (currentSlideIndex.value + 1) % totalSlides.value;
-    slideDirection.value = '50%';
 }
 
 function nextSlide() {
     currentSlideIndex.value = (currentSlideIndex.value + 1) % totalSlides.value;
-    slideDirection.value = '50%';
 }
 
 onMounted(() => {
@@ -160,7 +157,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-    <main id="slides" :class="{ 'cursor-hidden': idle }" :style="{ '--slide-dir': slideDirection }">
+    <main id="slides" :class="{ 'cursor-hidden': idle }">
 
         <TransitionGroup name="slide">
 
@@ -182,11 +179,16 @@ onBeforeUnmount(() => {
 
         </TransitionGroup>
     </main>
-    <img id="logo" src="https://media.pathe.nl/files_nl/logo/logo.svg"
-        :class="{ hide: currentSlideIndex !== media.length }">
-    <span id="clock" :class="{ hide: currentSlideIndex !== media.length }">
-        {{ format(now, 'HH:mm:ss') }}
-    </span>
+    <footer :class="{ hide: currentSlideIndex !== media.length }">
+        <span>work-in-progress</span>
+        <span id="date">
+            {{ format(now, 'EEEEEE d MMM', { locale: nl }) }}
+        </span>
+        <span class="essential" id="clock">
+            {{ format(now, 'HH:mm:ss') }}
+        </span>
+        <img class="essential" id="logo" src="https://media.pathe.nl/files_nl/logo/logo.svg">
+    </footer>
 </template>
 
 <style scoped>
@@ -206,33 +208,39 @@ onBeforeUnmount(() => {
     cursor: none;
 }
 
-#logo {
-    position: absolute;
-    bottom: 3vh;
-    left: 5vw;
-    height: 4vh;
-    transition: opacity 0.5s, bottom 0.5s, left 0.5s, height 0.5s;
 
-    &.hide {
-        opacity: 0.25;
-        bottom: 8px;
-        left: 8px;
-        height: 2.5vh;
-    }
-}
+footer {
+    display: flex;
+    align-items: center;
+    gap: 1em;
 
-#clock {
+    font-size: 1.35rem;
+
     position: absolute;
-    bottom: 3.75vh;
-    right: 5vw;
+    top: 1.5em;
+    right: 1.5em;
     color: #fff;
-    font-size: 2vh;
-    transition: bottom 0.5s, right 0.5s, font-size 0.5s;
+    transition: top 0.5s, right 0.5s, font-size 0.5s;
+    transition-delay: 1s;
+
+    &>*:not(.essential) {
+        opacity: 0.5;
+        transition: opacity 0.5s;
+        transition-delay: 1s;
+    }
 
     &.hide {
-        bottom: 8px;
-        right: 8px;
-        font-size: 1.2em;
+        top: 1em;
+        right: 1em;
+        font-size: 1.1rem;
+
+        &>*:not(.essential) {
+            opacity: 0;
+        }
+    }
+
+    #logo {
+        height: 2em;
     }
 }
 </style>

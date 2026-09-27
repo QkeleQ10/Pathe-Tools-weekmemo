@@ -13,7 +13,7 @@ import type { CombinedPatheShow } from '../scripts/types.ts';
 const props = defineProps<{
     movie: CombinedPatheShow;
     i: number;
-    minimal?: boolean;
+    selected?: boolean;
 }>();
 
 const cumulativeFeeling = computed(() => (props.movie.details.feelings.countEmotionDisappointed + props.movie.details.feelings.countEmotionLike + props.movie.details.feelings.countEmotionLove))
@@ -52,46 +52,47 @@ export function formatSynopsis(synopsis: string): string {
 </script>
 
 <template>
-    <div class="showcase-item" :class="{ minimal, [`i${i}`]: true }" :key="movie.slug"
+    <div class="showcase-item" :class="{ [`i${i}`]: true, selected }" :key="movie.slug"
         :style="{ '--accent': movie.backgroundDominantColor, '--animation-delay': `${(0.15 * i + 0.2) * transitionDelayMultiplier}s` }">
-        <img class="background" v-if="!minimal" :src="movie.backgroundPath.lg">
         <div class="image" :style="{ backgroundImage: `url(${movie.posterPath.lg})` }" alt="Movie Poster"></div>
-        <h4 class="title">{{ movie.title }}</h4>
-        <div class="details">
-            <p class="metadata miscellaneous"><b>
-                    {{ movie.theatreShow?.next24ShowtimesCount }}x &bull; {{ formatDuration(movie.duration)
-                    }}
-                    &bull; {{ formatSentenceCase(movie.genres.join(', ').toLowerCase()) }}
-                </b>
-                <IconNicam16 v-if="movie.contentRating.ref === '-16ans'" />
-                <IconNicam18 v-if="movie.contentRating.ref === '-18ans'" />
-            </p>
-            <p class="metadata release">
-                <em>Releasedatum: {{ movie.releaseAt?.['NL_NL'] ? formatDate(movie.releaseAt['NL_NL'] ?? '') : '' }}</em>
-            </p>
-            <div class="plot-wrapper">
-                <p class="plot" v-if="!minimal">{{ formatSynopsis(movie.details.synopsis) }}</p>
-            </div>
-            <div class="feelings" v-if="cumulativeFeeling > 10">
-                <div class="feeling"
-                    :style="{ flexBasis: `${(movie.details.feelings.countEmotionDisappointed + 1) / (cumulativeFeeling + 3) * 100}%` }">
-                    <IconRateBad /> {{ movie.details.feelings.countEmotionDisappointed }}
+
+        <div class="content">
+            <h4 class="title">{{ movie.title }}</h4>
+            <div class="details">
+                <p class="metadata miscellaneous"><b>
+                        {{ movie.theatreShow?.next24ShowtimesCount }}x &bull; {{ formatDuration(movie.duration)
+                        }}
+                        &bull; {{ formatSentenceCase(movie.genres.join(', ').toLowerCase()) }}
+                    </b>
+                    <IconNicam16 v-if="movie.contentRating.ref === '-16ans'" />
+                    <IconNicam18 v-if="movie.contentRating.ref === '-18ans'" />
+                </p>
+                <p class="metadata release">
+                    <em>Releasedatum: {{ movie.releaseAt?.['NL_NL'] ? formatDate(movie.releaseAt['NL_NL'] ?? '') : ''
+                        }}</em>
+                </p>
+                <div class="feelings" v-if="cumulativeFeeling > 10">
+                    <div class="feeling"
+                        :style="{ flexBasis: `${(movie.details.feelings.countEmotionDisappointed + 1) / (cumulativeFeeling + 3) * 100}%` }">
+                        <IconRateBad /> {{ movie.details.feelings.countEmotionDisappointed }}
+                    </div>
+                    <div class="feeling"
+                        :style="{ flexBasis: `${(movie.details.feelings.countEmotionLike + 1) / (cumulativeFeeling + 3) * 100}%` }">
+                        <IconRate /> {{ movie.details.feelings.countEmotionLike }}
+                    </div>
+                    <div class="feeling"
+                        :style="{ flexBasis: `${(movie.details.feelings.countEmotionLove + 1) / (cumulativeFeeling + 3) * 100}%` }">
+                        <IconRateHigh /> {{ movie.details.feelings.countEmotionLove }}
+                    </div>
                 </div>
-                <div class="feeling"
-                    :style="{ flexBasis: `${(movie.details.feelings.countEmotionLike + 1) / (cumulativeFeeling + 3) * 100}%` }">
-                    <IconRate /> {{ movie.details.feelings.countEmotionLike }}
-                </div>
-                <div class="feeling"
-                    :style="{ flexBasis: `${(movie.details.feelings.countEmotionLove + 1) / (cumulativeFeeling + 3) * 100}%` }">
-                    <IconRateHigh /> {{ movie.details.feelings.countEmotionLove }}
-                </div>
-            </div>
-            <div class="feelings" v-else>
-                <div>
-                    <IconAdded /> {{ movie.details.feelings.countWishList }}x op watchlist
+                <div class="feelings" v-else>
+                    <div>
+                        <IconAdded /> {{ movie.details.feelings.countWishList }}x op watchlist
+                    </div>
                 </div>
             </div>
         </div>
+
     </div>
 </template>
 
@@ -103,24 +104,23 @@ export function formatSynopsis(synopsis: string): string {
     overflow: hidden;
 
     display: grid;
-    grid-template:
-        "image title" auto
-        "image details" 1fr
-        / auto 1fr;
-    column-gap: .7em;
+    grid-template-columns: 20% 80%;
+    column-gap: .6em;
 
-    font-size: 2.2rem;
+    font-size: 1.7rem;
     background-color: var(--accent);
-    border-radius: .35vmax;
-    padding: 1vmax;
+    border-radius: .3em;
+    padding: .4em;
+    margin: .5em 1em;
     border: 1px solid #fff3;
     box-shadow: .1em .1em 1em rgba(0, 0, 0, 0.25);
 
     opacity: 1;
     transform: none;
+    overflow: hidden;
 
     /* Fade-in animation */
-    transition: opacity 0.5s ease, transform 0.5s ease;
+    transition: opacity 0.5s ease, transform 0.5s ease, grid-template-columns 500ms, padding 500ms, translate 500ms;
     transition-delay: var(--animation-delay, 0s);
 
     @starting-style {
@@ -128,113 +128,119 @@ export function formatSynopsis(synopsis: string): string {
         transform: scale(0.95) translateY(20%);
     }
 
-    .background {
-        position: absolute;
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        z-index: -1;
-        mask-image: linear-gradient(to right, rgba(0, 0, 0, .25) 50%, rgba(0, 0, 0, 0) 100%);
-    }
+    &.selected {
+        grid-template-columns: 100% 0%;
+        padding: 0;
+        translate: .5em;
 
-    .image {
-        grid-area: image;
-        max-width: 100%;
-        max-height: 100%;
-        aspect-ratio: 2 / 3;
-        background-size: 100% 100%;
-        background-position: center;
-        border-radius: .25vmax;
-        outline: 1px solid #fff3;
-        box-shadow: .1em .1em 1em rgba(0, 0, 0, 0.25);
-    }
-
-    .title {
-        grid-area: title;
-        margin: 0;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-
-    .details {
-        grid-area: details;
-        display: grid;
-        grid-template-rows: auto auto 1fr auto;
-        height: 100%;
-        overflow: hidden;
-
-        svg {
-            height: 1.3em;
-            vertical-align: -0.25em;
-            fill: #fff;
+        .content {
+            opacity: 0;
         }
     }
+}
 
-    .metadata {
-        margin-top: 0;
-        margin-bottom: 0;
-        font-size: .5em;
-        text-overflow: ellipsis;
+.content {
+    display: grid;
+    grid-template-rows: auto 1fr;
+    overflow: hidden;
 
-        em {
-            opacity: .6;
-            font-style: normal;
+    transition: opacity 500ms;
+}
+
+.background {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: -1;
+    mask-image: linear-gradient(to right, rgba(0, 0, 0, .25) 50%, rgba(0, 0, 0, 0) 100%);
+}
+
+.image {
+    max-width: 100%;
+    max-height: 100%;
+    aspect-ratio: 2 / 3;
+    background-size: 100% 100%;
+    background-position: center;
+    border-radius: .25vmax;
+    outline: 1px solid #fff3;
+    box-shadow: .1em .1em 1em rgba(0, 0, 0, 0.25);
+}
+
+.title {
+    margin: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.details {
+    display: grid;
+    grid-template-rows: auto auto 1fr auto;
+    height: 100%;
+    overflow: hidden;
+
+    svg {
+        height: 1.3em;
+        vertical-align: -0.25em;
+        fill: #fff;
+    }
+}
+
+.metadata {
+    margin-top: 0;
+    margin-bottom: 0;
+    font-size: .5em;
+    text-overflow: ellipsis;
+
+    em {
+        opacity: .6;
+        font-style: normal;
+    }
+}
+
+.miscellaneous {
+    margin-bottom: .5em;
+
+    svg {
+        margin-left: .5em;
+    }
+}
+
+.plot-wrapper {
+    overflow: hidden;
+    mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) calc(100% - 1em), rgba(0, 0, 0, 0) 100%);
+}
+
+.plot {
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
+    font-size: .45em;
+}
+
+.feelings {
+    display: flex;
+    gap: 5px;
+    font-size: .45em;
+    overflow: hidden;
+
+    .feeling {
+        position: relative;
+        flex: 1 1 0px;
+        overflow: visible;
+        text-wrap: nowrap;
+        padding-bottom: 5px;
+
+        &::after {
+            content: '';
+            position: absolute;
+            height: 5px;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: #fff;
+            border-radius: 50vmax;
         }
-    }
-
-    .miscellaneous {
-        margin-bottom: .5em;
-
-        svg {
-            margin-left: .5em;
-        }
-    }
-
-    .plot-wrapper {
-        overflow: hidden;
-        mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) calc(100% - 1em), rgba(0, 0, 0, 0) 100%);
-    }
-
-    .plot {
-        margin-top: 0.5em;
-        margin-bottom: 0.5em;
-        font-size: .45em;
-    }
-
-    .feelings {
-        display: flex;
-        gap: 5px;
-        font-size: .45em;
-        overflow: hidden;
-
-        .feeling {
-            position: relative;
-            flex: 1 1 0px;
-            overflow: visible;
-            text-wrap: nowrap;
-            padding-bottom: 5px;
-
-            &::after {
-                content: '';
-                position: absolute;
-                height: 5px;
-                bottom: 0;
-                left: 0;
-                right: 0;
-                background-color: #fff;
-                border-radius: 50vmax;
-            }
-        }
-    }
-
-    &.minimal {
-        font-size: 1.7rem;
-        padding: .5vmax;
-    }
-
-    &:not(.minimal).i0 {
-        font-size: 2.7rem;
     }
 }
 </style>

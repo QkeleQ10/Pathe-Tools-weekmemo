@@ -23,7 +23,6 @@ onMounted(() => setTimeout(() => {
 
 <template>
     <div class="showcase-hero" :key="movie.slug">
-        <div class="image" :style="{ backgroundImage: `url(${movie.posterPath.lg})` }" alt="Movie Poster"></div>
         <h4 class="title">{{ movie.title }}</h4>
         <div class="details">
             <p class="metadata miscellaneous"><b>
@@ -35,7 +34,8 @@ onMounted(() => setTimeout(() => {
                 <IconNicam18 v-if="movie.contentRating.ref === '-18ans'" />
             </p>
             <p class="metadata release">
-                <em>Releasedatum: {{ movie.releaseAt?.['NL_NL'] ? formatDate(movie.releaseAt['NL_NL'] ?? '') : '' }}</em>
+                <em>Releasedatum: {{ movie.releaseAt?.['NL_NL'] ? formatDate(movie.releaseAt['NL_NL'] ?? '') : ''
+                    }}</em>
             </p>
             <div class="plot-wrapper">
                 <p class="plot">{{ formatSynopsis(movie.details.synopsis) }}</p>
@@ -67,34 +67,16 @@ onMounted(() => setTimeout(() => {
 .showcase-hero {
     --accent: transparent;
 
-    position: relative;
     overflow: hidden;
 
     display: grid;
-    grid-template:
-        "image title" auto
-        "image details" 1fr
-        / auto 1fr;
+    grid-template-rows: auto 1fr;
+
     gap: 2vh 3vw;
 
-    font-size: 4rem;
-
-    .image {
-        grid-area: image;
-        max-width: 100%;
-        max-height: 100%;
-        aspect-ratio: 2 / 3;
-        background-size: 100% 100%;
-        background-position: center;
-        border-radius: .25vmax;
-        outline: 1px solid #fff3;
-        box-shadow: .1em .1em 1em rgba(0, 0, 0, 0.25);
-
-        z-index: 1;
-    }
+    font-size: 3rem;
 
     .title {
-        grid-area: title;
         margin: 0;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -107,7 +89,6 @@ onMounted(() => setTimeout(() => {
     }
 
     .details {
-        grid-area: details;
         display: grid;
         grid-template-rows: auto auto 1fr auto;
         height: 100%;
@@ -144,7 +125,7 @@ onMounted(() => setTimeout(() => {
 
     .plot-wrapper {
         overflow: hidden;
-        mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) calc(100% - 1em), rgba(0, 0, 0, 0) 100%);
+        /* mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) calc(100% - 1em), rgba(0, 0, 0, 0) 100%); */
     }
 
     .plot {
