@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, useTemplateRef } from 'vue';
+import { ref, computed, onMounted, onBeforeUnmount, useTemplateRef } from 'vue';
 import type * as types from '@/scripts/types.ts';
 import ShowcaseHero from './ShowcaseHero.vue';
 import ShowcaseItem from './ShowcaseItem.vue';
@@ -9,8 +9,15 @@ const props = defineProps<{
     movies: types.CombinedPatheShow[];
 }>();
 
+const emit = defineEmits<{
+    slidedone: [];
+}>();
+
 const sortedMovies = computed(() => props.movies);
 const thumbnailsEl = useTemplateRef('thumbnailsEl');
+const timers = new Set<ReturnType<typeof setTimeout>>();
+let isActive = false;
+let slideTimer: ReturnType<typeof setTimeout> | undefined;
 
 function animateScroll(el: HTMLElement, to: number, duration = 2500) {
     const start = el.scrollLeft;
@@ -51,7 +58,8 @@ const relevantMovies = computed(() => {
 function autoAdvance() {
 
     const scheduleScroll = (delayMs: number) => {
-        setTimeout(() => {
+        const timer = setTimeout(() => {
+            timers.delete(timer);
             const el = thumbnailsEl.value;
             if (!el) return;
             const scrollAmount = el.clientWidth * 0.6;
@@ -59,20 +67,26 @@ function autoAdvance() {
             const next = Math.min(el.scrollLeft + scrollAmount, maxScroll);
             animateScroll(el, next, 2500);
         }, delayMs);
+        timers.add(timer);
     };
 
     scheduleScroll(11000);
     scheduleScroll(20000);
-    setTimeout(() => {
+    const resetTimer = setTimeout(() => {
+        timers.delete(resetTimer);
         if (thumbnailsEl.value)
             thumbnailsEl.value.scrollTo({ left: 0, behavior: 'smooth' });
-    }, 29000)
+    }, 29000);
+    timers.add(resetTimer);
 
-    setTimeout(() => {
+    const advanceTimer = setTimeout(() => {
+        timers.delete(advanceTimer);
+        if (!isActive) return;
         slideDirection.value = '50%';
         currentIndex.value = (currentIndex.value + 1) % relevantMovies.value.length;
         autoAdvance();
     }, 30000);
+    timers.add(advanceTimer);
 }
 
 function goToSlide(index: number) {
@@ -83,7 +97,18 @@ function goToSlide(index: number) {
 }
 
 onMounted(() => {
+    isActive = true;
     autoAdvance();
+    slideTimer = setTimeout(() => {
+        emit('slidedone');
+    }, 60000);
+});
+
+onBeforeUnmount(() => {
+    isActive = false;
+    timers.forEach(timer => clearTimeout(timer));
+    timers.clear();
+    if (slideTimer) clearTimeout(slideTimer);
 });
 </script>
 

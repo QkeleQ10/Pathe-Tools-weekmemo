@@ -1,13 +1,30 @@
 <script setup lang="ts">
+import { onBeforeUnmount, onMounted } from 'vue';
+
 defineProps<{
     src: string;
 }>();
+
+const emit = defineEmits<{
+    slidedone: [];
+}>();
+
+let slideTimer: ReturnType<typeof setTimeout> | undefined;
+
+onMounted(() => {
+    slideTimer = setTimeout(() => {
+        emit('slidedone');
+    }, 35000);
+});
+
+onBeforeUnmount(() => {
+    if (slideTimer) clearTimeout(slideTimer);
+});
 </script>
 
 <template>
     <div class="slide image-slide">
-        <video v-if="src.endsWith('mp4')" :src="src" autoplay muted></video>
-        <img v-else :src="src" alt="Slide image" />
+        <img :src="src" />
     </div>
 </template>
 
@@ -21,7 +38,7 @@ defineProps<{
     height: 100%;
 }
 
-.image-slide img, .image-slide video {
+.image-slide img {
     max-width: 100%;
     max-height: 100%;
     object-fit: contain;
