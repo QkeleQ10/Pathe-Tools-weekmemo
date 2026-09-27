@@ -241,26 +241,49 @@ onBeforeUnmount(() => {
 .slide-enter-active,
 .slide-leave-active {
     position: absolute;
-    transition: all 0.5s;
     width: 100%;
 }
 
 .slide-enter-active {
     z-index: 1;
+    animation: peek-in 500ms both, slide-in 800ms 1000ms both;
 }
 
-.slide-enter-from {
-    transform: translateX(var(--slide-dir)) scale(0.8);
-    opacity: 0;
+@keyframes peek-in {
+    from {
+        transform: translateX(75%);
+    }
+
+    to {
+        transform: translateX(70%);
+    }
 }
 
-.slide-enter-to {
-    transform: none;
-    opacity: 1;
+@keyframes slide-in {
+    from {
+        clip-path: inset(0 25% 0 25%);
+    }
+
+    to {
+        clip-path: inset(0 0 0 0);
+        transform: none;
+    }
 }
 
-.slide-leave-to {
-    transform: translateX(calc(-1 * var(--slide-dir))) scale(0.8);
-    opacity: 0;
+.slide-leave-active {
+    z-index: 0;
+    animation: peek-out 500ms both, slide-out 800ms 1000ms both;
+}
+
+@keyframes peek-out {
+    to {
+        transform: translateX(-2.5%);
+    }
+}
+
+@keyframes slide-out {
+    to {
+        transform: translateX(-50%);
+    }
 }
 </style>
