@@ -6,7 +6,7 @@ defineProps<{
 
 <template>
     <div class="slide image-slide">
-        <video v-if="src.endsWith('mp4')" :src="src" autoplay muted>
+        <video v-if="src.endsWith('mp4')" :src="src" autoplay muted></video>
         <img v-else :src="src" alt="Slide image" />
     </div>
 </template>

@@ -27,6 +27,7 @@ async function fetchImages() {
         }
         const data: string[] = await response.json();
         images.value = data;
+        console.log(images.value);
     } catch (error) {
         console.error('Error fetching images:', error);
     }
