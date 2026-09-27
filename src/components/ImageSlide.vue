@@ -6,7 +6,8 @@ defineProps<{
 
 <template>
     <div class="slide image-slide">
-        <img :src="src" alt="Slide image" />
+        <video v-if="src.endsWith('mp4')" :src="src" autoplay muted>
+        <img v-else :src="src" alt="Slide image" />
     </div>
 </template>
 
@@ -20,7 +21,7 @@ defineProps<{
     height: 100%;
 }
 
-.image-slide img {
+.image-slide img, .image-slide video {
     max-width: 100%;
     max-height: 100%;
     object-fit: contain;
