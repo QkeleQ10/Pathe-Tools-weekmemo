@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { onBeforeUnmount, useTemplateRef } from 'vue';
+
 defineProps<{
     src: string;
 }>();
@@ -7,14 +9,26 @@ const emit = defineEmits<{
     slidedone: [];
 }>();
 
-function handleEnded() {
-    emit('slidedone');
+const video = useTemplateRef('video');
+
+let slideDoneTimer: ReturnType<typeof setTimeout> | undefined;
+
+function scheduleSlideDone() {
+    if (!video.value || !Number.isFinite(video.value.duration)) return;
+
+    if (slideDoneTimer) clearTimeout(slideDoneTimer);
+    const delay = Math.max(0, video.value.duration - 2.5) * 1000;
+    slideDoneTimer = setTimeout(() => emit('slidedone'), delay);
 }
+
+onBeforeUnmount(() => {
+    if (slideDoneTimer) clearTimeout(slideDoneTimer);
+});
 </script>
 
 <template>
     <div class="slide video-slide">
-        <video :src="src" muted autoplay playsinline @ended="handleEnded"></video>
+        <video ref="video" :src="src" muted autoplay playsinline @loadedmetadata="scheduleSlideDone"></video>
     </div>
 </template>
 
@@ -29,8 +43,8 @@ function handleEnded() {
 }
 
 .video-slide video {
-    max-width: 100%;
-    max-height: 100%;
+    width: 100%;
+    height: 100%;
     object-fit: contain;
 }
 </style>

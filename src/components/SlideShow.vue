@@ -180,9 +180,8 @@ onBeforeUnmount(() => {
         </TransitionGroup>
     </main>
     <footer :class="{ hide: currentSlideIndex !== media.length }">
-        <span>work-in-progress</span>
         <span id="date">
-            {{ format(now, 'EEEEEE d MMM', { locale: nl }) }}
+            {{ format(now, 'EEEE d MMMM', { locale: nl }) }}
         </span>
         <span class="essential" id="clock">
             {{ format(now, 'HH:mm:ss') }}
@@ -193,14 +192,15 @@ onBeforeUnmount(() => {
 
 <style scoped>
 #slides {
-    position: fixed;
-    inset: 0;
+    width: 100vw;
+    height: 100vh;
     overflow: hidden;
 
     .slide {
         box-sizing: border-box;
         height: 100%;
         width: 100%;
+        overflow: hidden;
     }
 }
 
@@ -208,31 +208,34 @@ onBeforeUnmount(() => {
     cursor: none;
 }
 
-
 footer {
-    display: flex;
-    align-items: center;
-    gap: 1em;
-
-    font-size: 1.35rem;
-
     position: absolute;
     top: 1.5em;
     right: 1.5em;
+
+    display: flex;
+    align-items: center;
+    gap: 1.25em;
+
+    font-size: 1.75em;
     color: #fff;
+
+    z-index: 2;
+
     transition: top 0.5s, right 0.5s, font-size 0.5s;
     transition-delay: 1s;
 
     &>*:not(.essential) {
-        opacity: 0.5;
-        transition: opacity 0.5s;
+        opacity: 1;
+        color: #ffffffaa;
+        transition: opacity 500ms;
         transition-delay: 1s;
     }
 
     &.hide {
         top: 1em;
         right: 1em;
-        font-size: 1.1rem;
+        font-size: 1.25rem;
 
         &>*:not(.essential) {
             opacity: 0;

@@ -2,7 +2,7 @@
 import { ref, computed, onMounted, onBeforeUnmount, useTemplateRef } from 'vue';
 import type * as types from '@/scripts/types.ts';
 import ShowcaseHero from './ShowcaseHero.vue';
-import ShowcaseItem from './ShowcaseItem.vue';
+import ShowcaseThumbnail from './ShowcaseThumbnail.vue';
 import Loader from './Loader.vue';
 
 const props = defineProps<{
@@ -15,26 +15,9 @@ const emit = defineEmits<{
 
 const sortedMovies = computed(() => props.movies);
 const thumbnailsEl = useTemplateRef('thumbnailsEl');
-const timers = new Set<ReturnType<typeof setTimeout>>();
-let isActive = false;
+
+let heroInterval: ReturnType<typeof setInterval> | undefined;
 let slideTimer: ReturnType<typeof setTimeout> | undefined;
-
-function animateScroll(el: HTMLElement, to: number, duration = 2500) {
-    const start = el.scrollLeft;
-    const change = to - start;
-    const startTime = performance.now();
-    const easeInOutCubic = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
-
-    function step(now: number) {
-        const elapsed = now - startTime;
-        const t = Math.min(elapsed / duration, 1);
-        const eased = easeInOutCubic(t);
-        el.scrollLeft = start + change * eased;
-        if (t < 1) requestAnimationFrame(step);
-    }
-
-    requestAnimationFrame(step);
-}
 
 const currentIndex = ref(0);
 const relevantMovies = computed(() => {
@@ -54,73 +37,31 @@ const relevantMovies = computed(() => {
         : sortedMovies.value.slice(0, 3); // fallback to first 3 movies otherwise
 })
 
-function autoAdvance() {
-
-    const scheduleScroll = (delayMs: number) => {
-        const timer = setTimeout(() => {
-            timers.delete(timer);
-            const el = thumbnailsEl.value;
-            if (!el) return;
-            const scrollAmount = el.clientWidth * 0.6;
-            const maxScroll = el.scrollWidth - el.clientWidth;
-            const next = Math.min(el.scrollLeft + scrollAmount, maxScroll);
-            animateScroll(el, next, 2500);
-        }, delayMs);
-        timers.add(timer);
-    };
-
-    scheduleScroll(11000);
-    scheduleScroll(20000);
-    const resetTimer = setTimeout(() => {
-        timers.delete(resetTimer);
-        if (thumbnailsEl.value)
-            thumbnailsEl.value.scrollTo({ left: 0, behavior: 'smooth' });
-    }, 29000);
-    timers.add(resetTimer);
-
-    const advanceTimer = setTimeout(() => {
-        timers.delete(advanceTimer);
-        if (!isActive) return;
-        currentIndex.value = (currentIndex.value + 1) % relevantMovies.value.length;
-        autoAdvance();
-    }, 30000);
-    timers.add(advanceTimer);
-}
-
 function goToSlide(index: number) {
-    console.log('Go to slide', index);
-    console.log('Current index', currentIndex.value);
     currentIndex.value = index;
+    thumbnailsEl.value?.children[index]?.scrollIntoView({
+        behavior: 'smooth',
+        inline: 'start'
+    });
 }
 
 onMounted(() => {
-    isActive = true;
-    autoAdvance();
+    heroInterval = setInterval(() => {
+        goToSlide((currentIndex.value + 1) % relevantMovies.value.length);
+    }, 20000);
     slideTimer = setTimeout(() => {
         emit('slidedone');
-    }, 60000);
+    }, relevantMovies.value.length * 20000 - 2500); // 20 seconds per movie - 2.5 seconds for the last transition
 });
 
 onBeforeUnmount(() => {
-    isActive = false;
-    timers.forEach(timer => clearTimeout(timer));
-    timers.clear();
+    if (heroInterval) clearInterval(heroInterval);
     if (slideTimer) clearTimeout(slideTimer);
 });
 </script>
 
 <template>
     <div class="slide" id="films-playing" v-if="sortedMovies.length">
-        <div id="backgrounds">
-            <TransitionGroup name="fade">
-                <template v-for="(movie, i) in sortedMovies.slice(0, relevantMovies.length)" :key="movie.slug">
-                    <div class="background" v-if="currentIndex === i" :style="{
-                        '--image': `url(${movie.backgroundPath.lg})`,
-                        '--accent': movie.backgroundDominantColor
-                    }"></div>
-                </template>
-            </TransitionGroup>
-        </div>
         <div id="header">
             <h3>Wat draait er?</h3>
             <small>
@@ -130,13 +71,13 @@ onBeforeUnmount(() => {
         <div id="heroes">
             <TransitionGroup name="details">
                 <template v-for="(movie, i) in sortedMovies" :key="movie.slug">
-                    <ShowcaseHero v-if="currentIndex === i" :movie="movie" :i="i" />
+                    <ShowcaseHero v-if="currentIndex === i" :movie="movie" />
                 </template>
             </TransitionGroup>
         </div>
         <div id="thumbnails" ref="thumbnailsEl">
-            <ShowcaseItem :minimal="true" :selected="currentIndex === i" v-for="(movie, i) in sortedMovies"
-                :key="movie.slug" :movie="movie" :i="i" @click="goToSlide(i)" />
+            <ShowcaseThumbnail :minimal="true" :selected="currentIndex === i" v-for="(movie, i) in sortedMovies"
+                :key="movie.slug" :movie="movie" @click="goToSlide(i)" />
         </div>
     </div>
 
@@ -160,9 +101,10 @@ onBeforeUnmount(() => {
 #films-playing {
     display: grid;
     grid-template:
-        "thumbnails header" auto
-        "thumbnails heroes" 1fr
-        / 25% 75%;
+        "header" auto
+        "heroes" 1fr
+        "thumbnails" auto
+        / 100%;
     gap: 1em;
 
     background-color: #090a0b;
@@ -170,25 +112,11 @@ onBeforeUnmount(() => {
     font-size: 1.7rem;
 }
 
-#backgrounds {
-    position: absolute;
-    inset: 0;
-}
-
-.background {
-    position: absolute;
-    inset: 0;
-    background:
-        linear-gradient(to bottom, transparent 70%, #090a0b 90%),
-        radial-gradient(ellipse farthest-corner at top, transparent 50%, #090a0b 90%),
-        linear-gradient(hsl(from var(--accent) h calc(s * 0.6) calc(l * 0.6) / 0.8)),
-        var(--image) no-repeat center/cover;
-}
 
 #header {
     grid-area: header;
 
-    margin-top: 1em;
+    margin: 2em 3em;
 
     display: flex;
     justify-content: space-between;
@@ -197,26 +125,43 @@ onBeforeUnmount(() => {
     z-index: 1;
 
     h3 {
-        font: 1.5em "Trade Gothic Bold Condensed 20", Arial, Helvetica, sans-serif;
+        font: 2em "Trade Gothic Bold Condensed 20", Arial, Helvetica, sans-serif;
         text-transform: uppercase;
         margin: 0;
     }
 }
 
 #heroes {
-    grid-area: heroes;
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
 }
 
 #thumbnails {
     grid-area: thumbnails;
 
-    padding: .5em;
+    display: flex;
+    align-items: end;
+    gap: 2em;
+
+    overflow-x: auto;
+    z-index: 1;
+
+    padding: 2em 3em;
+    padding-right: calc(100vw - 20em);
+
+    &>* {
+        flex: 0 0 auto;
+        width: 20em;
+    }
 }
 </style>
 
 <style>
 .fade-enter-active,
 .fade-leave-active {
+    position: absolute;
     transition: opacity 0.5s ease;
 }
 
@@ -228,11 +173,11 @@ onBeforeUnmount(() => {
 .details-enter-active,
 .details-leave-active {
     position: absolute;
-    transition: opacity 0.5s ease, translate 0.5s ease;
+    transition: opacity 500ms ease-out, transform 500ms ease-out;
 }
 
 .details-enter-from {
-    translate: -.5em;
+    transform: scale(1.05);
 }
 
 .details-enter-from,
