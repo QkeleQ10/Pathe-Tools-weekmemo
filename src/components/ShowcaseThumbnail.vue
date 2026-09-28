@@ -5,7 +5,7 @@ import IconNicam16 from '../assets/symbols/IconNicam16.vue';
 import IconNicam18 from '../assets/symbols/IconNicam18.vue';
 import type { CombinedPatheShow } from '../scripts/types.ts';
 
-const props = defineProps<{
+defineProps<{
     movie: CombinedPatheShow;
     selected?: boolean;
 }>();
