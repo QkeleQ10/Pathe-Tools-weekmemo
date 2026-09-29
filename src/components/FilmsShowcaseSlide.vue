@@ -13,31 +13,27 @@ const emit = defineEmits<{
     slidedone: [];
 }>();
 
-const sortedMovies = computed(() => props.movies);
 const thumbnailsEl = useTemplateRef('thumbnailsEl');
 
 let heroInterval: ReturnType<typeof setInterval> | undefined;
 let slideTimer: ReturnType<typeof setTimeout> | undefined;
 
 const currentIndex = ref(0);
-const relevantMovies = computed(() => {
-    const mostRecentReleaseDate = sortedMovies.value.length
-        ? new Date(sortedMovies.value[0]?.releaseAt['NL_NL'] ?? '').getTime()
-        : 0;
+const relevantFilmsIndices = computed(() => {
 
-    // select movies not older than 5 days from most recent release date
-    const selection = sortedMovies.value.filter(movie => {
+    // select movies for which the release date is no more than 6 days ago
+    const selection = props.movies.map((movie, index) => ({ movie, index })).filter(({ movie }) => {
         const releaseDate = new Date(movie.releaseAt['NL_NL'] ?? '').getTime();
-        return (mostRecentReleaseDate - releaseDate) <= 5 * 24 * 60 * 60 * 1000 || (new Date().getTime() - releaseDate) <= 6 * 24 * 60 * 60 * 1000;
-    });
-
+        return releaseDate >= Date.now() - 6 * 24 * 60 * 60 * 1000; // 6 days in milliseconds
+        
+    }).map(({ index }) => index);
 
     return selection.length > 0
-        ? selection // return selection if it is not empty
-        : sortedMovies.value.slice(0, 3); // fallback to first 3 movies otherwise
+        ? [...new Set([0, ...selection])] // return selection if it is not empty
+        : [0, 1, 2]; // fallback to first 3 movies otherwise
 })
 
-function goToSlide(index: number) {
+function focusFilm(index: number) {
     currentIndex.value = index;
     thumbnailsEl.value?.children[index]?.scrollIntoView({
         behavior: 'smooth',
@@ -45,13 +41,25 @@ function goToSlide(index: number) {
     });
 }
 
+function* infinitelyYield<T>(items: T[]): Generator<T, never, void> {
+    while (items.length > 0) {
+        yield* items;
+    }
+
+    throw new Error('Collection is empty.');
+}
+
 onMounted(() => {
+    const slideIndices = infinitelyYield(relevantFilmsIndices.value);
+    slideIndices.next();
+
     heroInterval = setInterval(() => {
-        goToSlide((currentIndex.value + 1) % relevantMovies.value.length);
+        focusFilm(slideIndices.next().value);
     }, 20000);
+
     slideTimer = setTimeout(() => {
         emit('slidedone');
-    }, relevantMovies.value.length * 20000 - 2500); // 20 seconds per movie - 2.5 seconds for the last transition
+    }, relevantFilmsIndices.value.length * 20000 - 2500); // 20 seconds per movie - 2.5 seconds for the last transition
 });
 
 onBeforeUnmount(() => {
@@ -61,30 +69,29 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-    <div class="slide" id="films-playing" v-if="sortedMovies.length">
+    <div class="slide" id="films-playing">
         <div id="header">
             <h3>Wat draait er?</h3>
-            <small>
-                <slot name="date"></slot>
-            </small>
         </div>
-        <div id="heroes">
-            <TransitionGroup name="details">
-                <template v-for="(movie, i) in sortedMovies" :key="movie.slug">
-                    <ShowcaseHero v-if="currentIndex === i" :movie="movie" />
-                </template>
-            </TransitionGroup>
-        </div>
-        <div id="thumbnails" ref="thumbnailsEl">
-            <ShowcaseThumbnail :minimal="true" :selected="currentIndex === i" v-for="(movie, i) in sortedMovies"
-                :key="movie.slug" :movie="movie" @click="goToSlide(i)" />
-        </div>
-    </div>
 
-    <div class="slide centre" v-else>
-        <div class="centre">
+        <div class="centre" v-if="!movies.length">
             <Loader />
         </div>
+
+        <template v-else>
+            <div id="heroes">
+                <TransitionGroup name="details">
+                    <template v-for="(m, i) in movies" :key="m.slug">
+                        <ShowcaseHero v-if="currentIndex === i" :movie="m" />
+                    </template>
+                </TransitionGroup>
+            </div>
+            <div id="thumbnails" ref="thumbnailsEl">
+                <ShowcaseThumbnail :minimal="true" :selected="currentIndex === i"
+                    v-for="(m, i) in movies" :key="m.slug"
+                    :movie="m" @click="focusFilm(i)" />
+            </div>
+        </template>
     </div>
 
 </template>
@@ -117,10 +124,6 @@ onBeforeUnmount(() => {
     grid-area: header;
 
     margin: 2em 3em;
-
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
 
     z-index: 1;
 

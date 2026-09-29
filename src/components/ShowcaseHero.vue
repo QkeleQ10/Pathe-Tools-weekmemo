@@ -135,6 +135,9 @@ const cumulativeFeeling = computed(() => (props.movie.details.feelings.countEmot
     text-wrap: pretty;
     font-size: 1.25em;
     line-height: 1.7em;
+    max-height: 10em;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .feelings {

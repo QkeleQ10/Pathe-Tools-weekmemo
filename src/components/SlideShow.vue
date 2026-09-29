@@ -116,8 +116,8 @@ async function fetchFilmsShowcaseMovies() {
                 const dateB = new Date(b.releaseAt['NL_NL'] ?? '').getTime();
                 const freqA = a.theatreShow?.next24ShowtimesCount ?? 0;
                 const freqB = b.theatreShow?.next24ShowtimesCount ?? 0;
-                return dateB - dateA || freqB - freqA;
-            }).slice(0, 12);
+                return freqB - freqA || dateB - dateA;
+            }).slice(0, 25);
     } catch (error) {
         console.error('Error fetching films showcase movies:', error);
     }
