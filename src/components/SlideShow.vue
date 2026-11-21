@@ -217,12 +217,14 @@ footer {
     align-items: center;
     gap: 1.25em;
 
-    font-size: 1.75em;
+    font-size: 2em;
     color: #fff;
 
     z-index: 2;
 
-    transition: top 0.5s, right 0.5s, font-size 0.5s;
+    transform-origin: top right;
+
+    transition: transform 0.5s;
     transition-delay: 1s;
 
     &>*:not(.essential) {
@@ -233,9 +235,7 @@ footer {
     }
 
     &.hide {
-        top: 1em;
-        right: 1em;
-        font-size: 1.25rem;
+        transform: translateY(-0.5em) translateX(0.5em) scale(0.75);
 
         &>*:not(.essential) {
             opacity: 0;

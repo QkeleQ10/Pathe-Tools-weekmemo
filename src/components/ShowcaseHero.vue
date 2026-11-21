@@ -82,7 +82,7 @@ const cumulativeFeeling = computed(() => (props.movie.details.feelings.countEmot
     z-index: -1;
     pointer-events: none;
 
-    filter: blur(0.2em);
+    /* filter: blur(0.2em); */
 
     background:
         linear-gradient(to bottom, transparent 70%, #090a0b 90%),

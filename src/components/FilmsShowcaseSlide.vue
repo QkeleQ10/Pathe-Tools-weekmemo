@@ -25,7 +25,7 @@ const relevantFilmsIndices = computed(() => {
     const selection = props.movies.map((movie, index) => ({ movie, index })).filter(({ movie }) => {
         const releaseDate = new Date(movie.releaseAt['NL_NL'] ?? '').getTime();
         return releaseDate >= Date.now() - 6 * 24 * 60 * 60 * 1000; // 6 days in milliseconds
-        
+
     }).map(({ index }) => index);
 
     return selection.length > 0
@@ -87,8 +87,7 @@ onBeforeUnmount(() => {
                 </TransitionGroup>
             </div>
             <div id="thumbnails" ref="thumbnailsEl">
-                <ShowcaseThumbnail :minimal="true" :selected="currentIndex === i"
-                    v-for="(m, i) in movies" :key="m.slug"
+                <ShowcaseThumbnail :minimal="true" :selected="currentIndex === i" v-for="(m, i) in movies" :key="m.slug"
                     :movie="m" @click="focusFilm(i)" />
             </div>
         </template>
@@ -117,6 +116,8 @@ onBeforeUnmount(() => {
     background-color: #090a0b;
     color: #ffffff;
     font-size: 1.7rem;
+
+    color-scheme: dark;
 }
 
 
@@ -148,7 +149,6 @@ onBeforeUnmount(() => {
     align-items: end;
     gap: 2em;
 
-    overflow-x: auto;
     z-index: 1;
 
     padding: 2em 3em;
@@ -157,6 +157,12 @@ onBeforeUnmount(() => {
     &>* {
         flex: 0 0 auto;
         width: 20em;
+    }
+
+    overflow-x: hidden;
+
+    &:hover {
+        overflow-x: overlay;
     }
 }
 </style>
